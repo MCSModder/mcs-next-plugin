@@ -7,7 +7,7 @@
   "scripts": {
     "build:tsc": "tsc",
     "dev:tsc": "tsc --watch",
-    "build": "rimraf dist && tsc --emitDeclarationOnly && webpack --mode production ",
+    "build": "rimraf dist && webpack --mode production && tsc --emitDeclarationOnly  ",
     "dev": "webpack --watch --mode development"
   },
   "devDependencies": {
@@ -20,6 +20,7 @@
     "eslint": "^8.39.0",
     "eslint-config-prettier": "^8.8.0",
     "eslint-plugin-prettier": "^4.2.1",
+    "mcs-puerts-next": "^1.0.0",
     "prettier": "^2.8.8",
     "rimraf": "^5.0.0",
     "ts-loader": "^9.4.2",
@@ -31,7 +32,10 @@
   "dependencies": {
     "consola": "^3.1.0",
     "destr": "^1.2.2",
+    "open": "^9.1.0",
     "queue-promise": "^2.2.1",
-    "split2": "^4.2.0"
+    "split2": "^4.2.0",
+    "ts-morph": "^18.0.0",
+    "web-cholk": "^0.1.1"
   }
 }

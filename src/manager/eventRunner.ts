@@ -1,8 +1,7 @@
 /* eslint-disable @typescript-eslint/ban-ts-comment */
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { Queue } from "queue-promise";
-declare let CS: any;
-declare let puer: any;
+import Queue from "queue-promise";
+import { Runner, Env } from "mcs-puerts-next";
 const { DialogSystem } = CS.SkySwordKill.Next;
 const { DialogAnalysis, DialogCommand } = DialogSystem;
 const { Traverse } = CS.HarmonyLib;
@@ -217,18 +216,13 @@ export const getRunner = (rawEnv: any, callCommand: any) => {
   const { bindEventData } = callCommand;
   const newEnv = { rawEnv };
   const env = new Proxy(newEnv, {
-    get(target, property, receiver) {
+    get(target, property) {
       if (typeof property === "symbol") return undefined;
       const { rawEnv: env } = target;
       const value = env[property];
       const extMethod = DialogAnalysis.GetEnvQuery(property);
       const notValue = value === null || value === undefined;
       const hasExtMethod = !!extMethod;
-      // console.log(`property:${property} type:${typeof value} value:${value}`);
-      // console.log(
-      //   `property:${property} type:${typeof extMethod} extMethod:${extMethod}`
-      // );
-      // console.log(`!value && !extMethod :${!hasValue} && ${!hasExtMethod}`);
 
       if (notValue && !hasExtMethod) {
         console.trace(
@@ -255,7 +249,7 @@ export const getRunner = (rawEnv: any, callCommand: any) => {
       }
       return () => syncRunEvent(() => env[property], null, false);
     },
-    set(target, property, value, receiver) {
+    set(target, property, value) {
       if (typeof property === "symbol") return false;
       //console.log(property);
       const { rawEnv: env } = target;
@@ -269,7 +263,7 @@ export const getRunner = (rawEnv: any, callCommand: any) => {
   const storyManager = new StoryManager(callCommand, newEnv.rawEnv);
   const _runner = { env, callCommand, bindEventData, storyManager };
   const runner = new Proxy(_runner, {
-    get(target, property, receiver) {
+    get(target, property) {
       //@ts-ignore
       if (typeof property === "symbol") return target[property];
       //@ts-ignore
@@ -286,28 +280,22 @@ export const getRunner = (rawEnv: any, callCommand: any) => {
         return await syncRunEvent(command, rawEnv);
       };
     },
-    set(target, property, value, receiver) {
+    set() {
       return false;
     },
   });
-  return runner;
+  return runner as unknown;
 };
 export const getEnv = (rawEnv: any) => {
   const newEnv = { rawEnv };
   const env = new Proxy(newEnv, {
-    get(target, property, receiver) {
+    get(target, property) {
       if (typeof property === "symbol") return undefined;
       const { rawEnv: env } = target;
       const value = env[property];
       const extMethod = DialogAnalysis.GetEnvQuery(property);
       const hasValue = !!value;
       const hasExtMethod = !!extMethod;
-      // console.log(`property:${property} type:${typeof value} value:${value}`);
-      // console.log(
-      //   `property:${property} type:${typeof extMethod} extMethod:${extMethod}`
-      // );
-      // console.log(`!value && !extMethod :${!hasValue} && ${!hasExtMethod}`);
-
       if (!hasValue && !hasExtMethod) {
         if (hasField(env, property)) {
           return new EnvValue(env, property);
@@ -334,7 +322,7 @@ export const getEnv = (rawEnv: any) => {
       }
       return new EnvValue(env, property);
     },
-    set(target, property, value, receiver) {
+    set(target, property, value) {
       if (typeof property === "symbol") return false;
       //console.log(property);
       const { rawEnv: env } = target;
@@ -347,5 +335,5 @@ export const getEnv = (rawEnv: any) => {
     },
   });
 
-  return env;
+  return env as unknown as Env;
 };

@@ -3,73 +3,138 @@
 import { createReadStream, statSync, stat, ReadStream } from "node:fs";
 //@ts-ignore
 import destr from "destr";
-//@ts-ignore
-import { createConsola } from "consola/core";
 import split from "split2";
+import Cholk from "web-cholk";
 // const cholk = Cholk();
-const consola = createConsola({
-  reporters: [
-    {
-      log: (logObj) => {
-        //@ts-ignore
-        const cs = console.console_org ? console.console_org : console;
-        cs(destr(logObj));
-      },
-    },
-  ],
-});
-const Level = {
-  Log: "log",
+
+const cholk = Cholk();
+type TLogger = { [props in LogLevelName]: (text: string) => any };
+const LOGGER: TLogger = {
+  Info(text: string) {
+    return cholk.green("[Info]").nil(text);
+  },
+  Debug(text: string) {
+    return cholk.cyan("[Debug]").nil(text);
+  },
+  None(text: string) {
+    return cholk.green("[Info]").nil(text);
+  },
+  All(text: string) {
+    return `[ALL]${text}`;
+  },
+  Message: function (text: string) {
+    return cholk.green("[Message]").nil(text);
+  },
+  Warning: function (text: string) {
+    return cholk.yellow("[Warning]").nil(text);
+  },
+  Error: function (text: string) {
+    return cholk.red("[Error]").nil(text);
+  },
+  Fatal: function (text: string) {
+    return cholk.yellow("[Fatal]").nil(text);
+  },
 };
-interface LogInfo {
-  option: {
-    LogLevelName: string;
-    LevelLog: string;
-    SourceName: string;
-    Data: string;
-  };
+type PuertsLogLevelName = "info" | "log" | "warn" | "debug" | "error";
+enum PuertsLogLevel {
+  Log = 0,
+  Info = 1,
+  Debug = 2,
+  Warn = 4,
+  Error = 8,
+}
+enum LogLevel {
+  None = 0,
+  Fatal = 1,
+  Error = 2,
+  Warning = 4,
+  Message = 8,
+  Info = 16, // 0x00000010
+  Debug = 32, // 0x00000020
+  All = Debug | Info | Message | Warning | Error | Fatal, // 0x0000003F
+}
+type LogLevelName =
+  | "Debug"
+  | "Info"
+  | "Message"
+  | "Warning"
+  | "Error"
+  | "Fatal"
+  | "All"
+  | "None";
+interface LogInfoOption {
+  PuertsLogLevelName: PuertsLogLevelName;
+  PuertsLogLevel: PuertsLogLevel;
+  LogLevelName: LogLevelName;
+  LevelLog: LogLevel;
+  SourceName: string;
+  Data: string;
 }
 class LogInfo {
-  static create(input: string) {
+  private static _inst: LogInfo;
+  public static get instance() {
+    this._inst ??= new this("");
+    return this._inst;
+  }
+
+  public static create(input: string) {
     return new LogInfo(input);
   }
 
-  static print(input: string) {
+  public static print(input: string) {
     if (!input) return;
-    return new LogInfo(input).print();
+    return LogInfo.instance.setLog(input).print();
   }
 
+  public option: LogInfoOption = {
+    PuertsLogLevelName: "info",
+    PuertsLogLevel: PuertsLogLevel.Info,
+    LevelLog: LogLevel.Info,
+    SourceName: "",
+    Data: "",
+    LogLevelName: "Info",
+  };
+
   constructor(input: string) {
-    if (typeof input !== "string") return;
+    this.setLog(input);
+  }
+
+  setLog(input: string) {
+    if (typeof input !== "string") return this;
     const result = destr(input);
-    this.option = Object.assign(
+    this.option = Object.assign<LogInfoOption, Partial<LogInfoOption>>(
       {
+        PuertsLogLevelName: "info",
+        PuertsLogLevel: PuertsLogLevel.Info,
+        LevelLog: LogLevel.Info,
         LogLevelName: "Info",
-        LevelLog: Level.Log,
         SourceName: "",
         Data: "",
       },
       result
     );
+    return this;
   }
 
   print() {
     const {
-      option: { LevelLog, SourceName, Data, LogLevelName },
+      option: { LevelLog, SourceName, Data, PuertsLogLevelName, LogLevelName },
     } = this;
-    consola.log(Data);
-    // const cs = console.console_org ? console.console_org : console;
-    // const data = `[${SourceName}] ${Data}`;
-    // const log = LOGGER[LogLevelName]
-    //   ? LOGGER[LogLevelName](data)
-    //   : `[${LogLevelName}]${data}`;
-    // if (typeof log === "string") {
-    //   cs[LevelLog](log);
-    // } else {
-    //   cs[LevelLog](...log);
-    // }
+    //@ts-ignore
+    const cs = console.console_org ? console.console_org : console;
+    const data = `[${SourceName}] ${Data}`;
+    const log =
+      LogLevelName in LOGGER
+        ? LOGGER[LogLevelName](data)
+        : `[${LogLevelName}]${data}`;
+    if (typeof log === "string") {
+      cs[PuertsLogLevelName](log);
+    } else {
+      cs[PuertsLogLevelName](...log);
+    }
   }
 }
+
 interface Logger {
   startPos: number;
   loading: boolean;
@@ -88,41 +153,28 @@ class Logger {
     this.line = "";
     const size = statSync(path).size;
     this.createReadline(size);
-    //const that = this;
+    //@ts-ignorethat
+    // eslint-disable-next-line @typescript-eslint/no-this-alias
+    const that = this;
     this.time = setInterval(() => {
-      if (!this.loading) {
-        this.loading = true;
+      if (!that.loading) {
+        that.loading = true;
         stat(path, (err, stat) => {
           if (err) return console.error(err);
-          if (this.startPos === stat.size) {
-            this.loading = false;
+          if (that.startPos === stat.size) {
+            that.loading = false;
           } else {
-            this.loading = true;
-            this.createReadline(stat.size);
+            that.loading = true;
+            that.createReadline(stat.size);
           }
         });
       }
     }, 500);
-    // this.chokidar = chokidar.watch(path);
-    // this.chokidar.on("all", (eventName, path, stats) => {
-    //   LogInfo.print({
-    //     Data: `eventName:${eventName} 路径:${path} loading:${that.loading}`,
-    //   });
-    //   if (!that.loading && stats?.size != that.startPos) {
-    //     that.createReadline();
-    //   }
-    // });
   }
 
   createReadline(size: number) {
-    // LogInfo.print({
-    //   Data: `开始新读取`,
-    // });
     const { path } = this;
     this.loading = true;
-    // LogInfo.print({
-    //   Data: `start:${this.startPos} end:${size}`,
-    // });
     if (this.startPos === size) {
       this.loading = false;
       return;
@@ -134,34 +186,30 @@ class Logger {
     });
     this.startPos = size;
     this.currentReadStream = input;
-
+    // eslint-disable-next-line @typescript-eslint/no-this-alias
+    const that = this;
     input
       .pipe(split())
       .on("data", (input: string) => {
-        this.line += input;
-        if (this.line.startsWith("{") && this.line.endsWith("}")) {
-          LogInfo.print(this.line);
-          this.line = "";
+        that.line += input;
+        if (that.line.startsWith("{") && that.line.endsWith("}")) {
+          LogInfo.print(that.line);
+          that.line = "";
         }
       })
       .on("end", () => {
         // LogInfo.print({
         //   Data: `已经读取完毕:${path}`,
         // });
-        this.loading = false;
+        that.loading = false;
         const newSize = statSync(path)?.size;
         if (newSize !== size) {
-          this.loading = true;
-          this.createReadline(newSize);
+          that.loading = true;
+          that.createReadline(newSize);
         }
-      })
-      .on("close", () => {
-        // LogInfo.print({
-        //   Data: `开始关闭:${path}`,
-        // });
       });
   }
 }
-export default function (path: string) {
+export function createLogger(path: string) {
   Logger.create(path);
 }

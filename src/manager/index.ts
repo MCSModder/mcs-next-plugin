@@ -1,3 +1,5 @@
+import JSDialogEvent from "./jsDialogEvent";
 import NextManager from "./nextManager";
 
-export { NextManager };
+import * as EventRunner from "./eventRunner";
+export { JSDialogEvent, NextManager, EventRunner };

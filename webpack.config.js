@@ -1,5 +1,42 @@
 /* eslint-disable @typescript-eslint/ban-ts-comment */
 /* eslint-disable no-undef */
+const externals = {};
+[
+  "fs",
+  "crypto",
+  "dns",
+  "http",
+  "http2",
+  "https",
+  "net",
+  "os",
+  "path",
+  "querystring",
+  "stream",
+  "repl",
+  "readline",
+  "tls",
+  "dgram",
+  "url",
+  "v8",
+  "vm",
+  "zlib",
+  "util",
+  "assert",
+  "events",
+  "tty",
+  "fsevents",
+  "module",
+].reduce((prev, v) => {
+  // @ts-ignore
+  prev[v] = "commonjs " + v;
+  return prev;
+}, externals);
+["CS", "MCS", "NEXT", "puer", "puerts"].reduce((prev, v) => {
+  // @ts-ignore
+  prev[v] = "global " + v;
+  return prev;
+}, externals);
 module.exports = {
   mode: "production",
 
@@ -24,9 +61,10 @@ module.exports = {
         test: /\.[jt]sx?$/,
         loader: "esbuild-loader",
         options: {
-          target: "es2016",
+          target: "node16",
           // JavaScript version to compile to
           format: "cjs",
+          minify: false,
         },
       },
     ],
@@ -35,34 +73,5 @@ module.exports = {
     extensions: [".tsx", ".ts", ".js"],
   },
 
-  externals: [
-    "fs",
-    "crypto",
-    "dns",
-    "http",
-    "http2",
-    "https",
-    "net",
-    "os",
-    "path",
-    "querystring",
-    "stream",
-    "repl",
-    "readline",
-    "tls",
-    "dgram",
-    "url",
-    "v8",
-    "vm",
-    "zlib",
-    "util",
-    "assert",
-    "events",
-    "tty",
-    "fsevents",
-  ].reduce((prev, v) => {
-    // @ts-ignore
-    prev[v] = "commonjs " + v;
-    return prev;
-  }, {}),
+  externals,
 };
