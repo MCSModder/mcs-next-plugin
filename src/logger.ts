@@ -197,7 +197,7 @@ class Logger {
           that.line = "";
         }
       })
-      .on("end", () => {
+      .on("close", () => {
         // LogInfo.print({
         //   Data: `已经读取完毕:${path}`,
         // });

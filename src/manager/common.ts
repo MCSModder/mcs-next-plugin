@@ -1,6 +1,9 @@
 import { Runner, Env } from "mcs-puerts-next";
 
-export type DialogEventData = (runner: Runner, env: Env) => Promise<void>;
+export type DialogEventData = (
+  runner: Runner,
+  env: Env
+) => Promise<void> | void;
 export interface IList<T> {
   get_Item(key: number): T;
   set_Item(key: number, value: T): void;
@@ -28,9 +31,15 @@ export interface IDialogTriggerOption {
   priority: number;
   triggerEvent: string;
 }
-export interface IJSDialogEventOption extends IDialogEventOption {
-  trigger: IDialogTriggerOption;
+export interface IJSDialogEventOption {
+  trigger?: IDialogTriggerOption;
   event: DialogEventData | string | string[];
+  id?: string;
+  character?: {
+    [prop in string]: number;
+  };
+  dialog?: string[];
+  option?: string[];
 }
 export type JSDialogEventData = {
   [propName in string]: IJSDialogEventOption | DialogEventData;

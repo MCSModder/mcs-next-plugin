@@ -49,8 +49,10 @@ module.exports = {
     filename: "[name].js",
     path: __dirname + "/dist",
     library: {
-      type: "commonjs",
+      name: "PuertsNext",
+      type: "commonjs-module",
     },
+    iife: true,
   },
   experiments: { outputModule: false },
   optimization: { minimize: false },
@@ -63,7 +65,7 @@ module.exports = {
         options: {
           target: "node16",
           // JavaScript version to compile to
-          format: "cjs",
+          format: "iife",
           minify: false,
         },
       },

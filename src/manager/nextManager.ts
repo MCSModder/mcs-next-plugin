@@ -122,7 +122,7 @@ export default class NextManager {
     let { id, event, dialog } = opt;
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     id = id === "" ? key : id;
-    trigger.id = trigger.id === "" ? key : trigger.id;
+    if (trigger) trigger.id = trigger.id === "" ? key : trigger.id;
     const dialogEvent: Partial<IDialogEventOption> = {
       id,
       character,
@@ -133,11 +133,11 @@ export default class NextManager {
     if (event) {
       switch (typeof event) {
         case "function":
-          this.setStory(id, event as DialogEventData);
+          if (id) this.setStory(id, event as DialogEventData);
           dialogEvent.dialog = [`RunDialogEventJavaScript*${event}`];
           break;
         case "string":
-          trigger.triggerEvent = event;
+          if (trigger) trigger.triggerEvent = event;
           break;
         case "object":
           if (Array.isArray(event)) {
@@ -149,6 +149,7 @@ export default class NextManager {
       }
     }
     this.setEventData(dialogEvent);
+    if (!trigger) return;
     const { type, condition } = trigger;
     if (trigger && type.length > 0 && condition.length > 0) {
       console.log(`注册触发器:${trigger.id}`);
